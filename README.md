@@ -3,7 +3,7 @@
 
 This analysis was performed by linking Florida Agency for HealthCare Administration (FL AHCA) dataset with CMS Physician Compare Public Use file (Phy Compare) for the Year 2016. FL AHCA was primarily used to capture the procedures of interest and analyze patient factors, whereas Phy Compare enabled us to analyze the surgeon gender, specialty, and years of experience.  
 
-Acccess to FL AHCA is subject to a Data Use Agreement and authorization by the Florida Agency of Health Care Administration, all of the authors on this project have authorization to utilize this data set for research purposes.    
+Access to FL AHCA is subject to a Data Use Agreement and authorization by the Florida Agency of Health Care Administration, all of the authors on this project have authorization to utilize this data set for research purposes.    
 
 Physican Compare data is publicly available for download through CMS website. 
 
