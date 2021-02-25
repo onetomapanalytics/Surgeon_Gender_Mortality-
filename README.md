@@ -9,3 +9,4 @@ Physican Compare data is publicly available for download through CMS website.
 
 We have made sure that all the analysis is thoroughly reviewed to be error free, furthermore all the results have been hidden that may lead back to tracing individual identiies.
 All the coding steps involved in linking, cleaning, and preparing the data for analysis and modeling have been listed below with the name of each file. Data preprocessing was done using STATA, and modelling was performed in R. 
+Code for all steps involved in cleaning, linking, pre processing, propensity matching and modeling has been shared.  
