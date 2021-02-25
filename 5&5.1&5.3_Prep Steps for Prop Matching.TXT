@@ -1,0 +1,462 @@
+Step5 -In this step from the master file above, some further cleaning was performed, irrelevant variables were dropped, and then for each individual procedure a separate data file was created. 
+
+Step5.1 In this step from individual procedure files, the set of variables that we used for propensity matching were reordered and brought at the start. 
+
+Step5.3 all the 25 individual procedure files were appended to make a 2010-2015 master file with the important variables were reordered. Over here we switched to R and performed IPWM-Inverse probability weight matching  propensity matching. R code can be seen in the next step for 25 inidividual procedures
+
+
+
+**************************************************************************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+drop othoper_ph othoper__a ecmorb1 ecmorb2 ecmorb3 poa_ecmorb poa_ecmo_a poa_ecmo_b gender admtype hr_arrival drg nurchgs nuriiichgs phyocchgs attenphyid operphyid otherphyid
+
+drop othdiag1 othdiag2 othdiag3 othdiag4 othdiag5 othdiag6 othdiag7 othdiag8 othdiag9 othdiag10 othdiag11 othdiag12 othdiag13 othdiag14 othdiag15 othdiag16 othdiag17 othdiag18 othdiag19 othdiag20 othdiag21 othdiag22 othdiag23 othdiag24 othdiag25 othdiag26 othdiag27 othdiag28 othdiag29 othdiag30 poa1 poa2 poa3 poa4 poa5 poa6 poa7 poa8 poa9 poa10 poa11 poa12 poa13 poa14 poa15 poa16 poa17 poa18 poa19 poa20 poa21 poa22 poa23 poa24 poa25 poa26 poa27 poa28 poa29 poa30 ecode1 ecode2 ecode3 poa_ext_in poa_ext__a poa_ext__b
+
+drop othproc1 othproc2 othproc3 othproc4 othproc5 othproc6 othproc7 othproc8 othproc9 othproc10 othproc11 othproc12 othproc13 othproc14 othproc15 othproc16 othproc17 othproc18 othproc19 othproc20 othproc21 othproc22 othproc23 othproc24 othproc25 othproc26 othproc27 othproc28 othproc29 othproc30
+
+drop days_proc1 days_proc2 days_proc3 days_proc4 days_proc5 days_proc6 days_proc7 days_proc8 days_proc9 days_pro_a days_pro_b days_pro_c days_pro_d days_pro_e days_pro_f days_pro_g days_pro_h days_pro_i days_pro_j days_pro_k days_pro_l days_pro_m days_pro_n days_pro_o days_pro_p days_pro_q days_pro_r days_pro_s days_pro_t days_pro_u
+
+drop atten_phyi atten_phyn oper_phyid ptstate ptcounty ptcountry pro_code mod_code qtr
+ 
+order  Years_Exp graduationyear bene_unique_cnt line_srvc_cnt npi roomchgs nur1chgs nur2chgs nur3chgs icuchgs ccuchgs pharmchgs medchgs oncochgs labchgs radchgs oprmchgs aneschgs respchgs phythchgs occupchgs speechgs erchgs cardiochgs traumachgs recovchgs laborchgs obserchgs behavchgs otherchgs tchgs daysproc weekday msdrg zipcode dis_time adm_time edhr_arr losdays age, first 
+
+replace admitdiag = subinstr(admitdiag, ".", "",.)
+
+replace prindiag = subinstr(prindiag , ".", "",.)
+
+replace prinproc = subinstr(prinproc, ".", "",.)
+
+order admitdiag prindiag poa_prin_d prinproc CCI, first 
+
+tab nppes_provider_gender
+
+replace nppes_provider_gender = "0" if nppes_provider_gender == "M"
+replace nppes_provider_gender = "1" if nppes_provider_gender == "F"
+
+drop nppes_provider_last_org_name nppes_provider_first_name
+
+drop fac_region fac_county poa_prin_d condtn type_serv
+
+drop dis_time adm_time edhr_arr msdrg weekday daysproc
+
+order Years_Exp-age bene_day_srvc_cnt-average_medicare_standard_amt, first
+
+save "Y:\Tara Barry\Surgeon Gender Mortality\Data2\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta", replace
+
+*************LAP Cholecystectomy*********************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if lapchole ==1
+
+save "\lapchole.dta", replace
+
+*************open Cholecystectomy*********************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if openchole ==1 
+
+save "\openchole.dta", replace
+
+****************************EXLAP***************************************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if exlap ==1 
+
+save "\exlap.dta", replace
+
+***************EVAR******************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if evar ==1 
+
+save "\evar.dta", replace
+
+***********************CEA***************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if CEA ==1 
+
+save "\CEA.dta", replace
+
+*************************lapcolectomy******************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if lapcolectomy ==1 
+
+save "\lapcolectomy.dta", replace
+
+*************************opencolectomy******************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if opencolectomy ==1 
+
+save "\opencolectomy.dta", replace
+
+*****************************************CABG*********************************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if CABG ==1 
+
+save "\CABG.dta", replace
+
+**********************Total Hip Replacement*****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if totalhip ==1 
+
+
+save "\totalhip.dta", replace
+
+**********************Total Knee Replacement*****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if totalknee ==1 
+
+save "\totalknee.dta", replace
+
+*****************************************Lobectomy/Pneumonectomy**************************************use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+
+keep if lobectomy ==1 
+
+save "\lobectomy.dta", replace
+
+**************************************Prostatectomy****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if prostatectomy ==1 
+
+save "\prostatectomy.dta", replace
+
+**************************************Thyroidectomy****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if thyroidectomy ==1 
+
+save "\thyroidectomy.dta", replace
+
+************************************PANCREATECTOMY*****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if pancreatectomy ==1 
+
+save "\pancreatectomy.dta", replace
+
+************************Spinal Fusion***************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if spinalfusion ==1 
+
+save "\spinalfusion.dta", replace
+
+************************LEamp***************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if LEamp ==1 
+
+save "\LEamp.dta", replace
+
+**********************HYSTERECTOMY**************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if hysterectomy ==1
+
+save "\hysterectomy.dta", replace
+
+************************NEPHRECTOMY******************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if nephrectomy ==1 
+
+save "\nephrectomy.dta", replace
+
+*********************************MASTECTOMY********************************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if mastectomy ==1 
+
+save "\mastectomy.dta", replace
+
+************************CYSTECTOMY******************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if cystectomy ==1
+
+save "\cystectomy.dta", replace
+
+************************GASTRIC BYPASS******************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if gastricbypass ==1 & prindiag == "27801"
+
+save "\gastricbypass.dta", replace
+
+************************ORIFFEMUR******************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if ORIFFEMUR ==1 
+
+save "\ORIFFEMUR.dta", replace
+
+***********************FLAPRECON****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if FLAPRECON ==1 
+
+save "\FLAPRECON.dta", replace
+
+***********************LIVERRESECTION****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if LIVERRESECTION ==1 
+
+save "\LIVERRESECTION.dta", replace
+
+**********************SPLENECTOMY****************************************
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+keep if SPLENECTOMY ==1 
+
+save "\SPLENECTOMY.dta", replace
+
+**********************************************************************************
+
+STEP 5.1 
+
+*************LAP Cholecystectomy*********************
+use " \lapchole.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \lapchole.dta", replace
+
+*************open Cholecystectomy*********************
+use " \openchole.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \openchole.dta", replace
+
+****************************EXLAP***************************************************************
+use " \exlap.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \exlap.dta", replace
+
+***************EVAR******************************************
+use " \evar.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \evar.dta", replace
+
+***********************CEA***************************
+use " \CEA.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \CEA.dta", replace
+
+*************************lapcolectomy******************************
+use " \lapcolectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \lapcolectomy.dta", replace
+
+*************************opencolectomy******************************************
+use " \opencolectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \opencolectomy.dta", replace
+
+****************************************CABG*************************************************************
+use " \CABG.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \CABG.dta", replace
+
+**********************Total Hip Replacement*****************************************
+use " \totalhip.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \totalhip.dta", replace
+
+**********************Total Knee Replacement*****************************************
+use " \totalknee.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \totalknee.dta", replace
+
+*****************************************Lobectomy/Pneumonectomy****************************************
+use " \lobectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \lobectomy.dta", replace
+
+**************************************Prostatectomy****************************************
+use " \prostatectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \prostatectomy.dta", replace
+
+**************************************Thyroidectomy****************************************
+use " \thyroidectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \thyroidectomy.dta", replace
+
+************************************PANCREATECTOMY*****************************************
+use " \pancreatectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \pancreatectomy.dta", replace
+
+************************Spinal Fusion***************************************
+use " \spinalfusion.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \spinalfusion.dta", replace
+
+************************LEamp***************************************
+use " \LEamp.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \LEamp.dta", replace
+
+**********************HYSTERECTOMY**************************************
+use " \hysterectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \hysterectomy.dta", replace
+
+************************NEPHRECTOMY******************************
+use " \nephrectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \nephrectomy.dta", replace
+
+*********************************MASTECTOMY********************************************************
+use " \mastectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \mastectomy.dta", replace
+
+************************CYSTECTOMY******************************
+use " \cystectomy.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \cystectomy.dta", replace
+
+************************GASTRIC BYPASS******************************
+use " \gastricbypass.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \gastricbypass.dta", replace
+
+************************ORIFFEMUR******************************
+use " \ORIFFEMUR.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \ORIFFEMUR.dta", replace
+
+***********************FLAPRECON****************************************
+use " \FLAPRECON.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \FLAPRECON.dta", replace
+
+***********************LIVERRESECTION****************************************
+use " \LIVERRESECTION.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \LIVERRESECTION.dta", replace
+
+**********************SPLENECTOMY****************************************
+use " \SPLENECTOMY.dta"
+
+order Years_Exp age sex ethnicity race adm_prior CCI, first
+
+save " \SPLENECTOMY.dta", replace
+
+**********************************************************************************
+
+STEP 5.3 
+
+
+use  \lapchole.dta"
+
+append using  \openchole.dta"
+****************************EXLAP
+append using  \exlap.dta"
+***************EVAR
+append using  \evar.dta"
+***********************CEA
+append using  \CEA.dta"
+*************************lapcolectomy
+append using  \lapcolectomy.dta"
+*************************opencolectomy
+append using  \opencolectomy.dta"
+****************************************CABG
+append using  \CABG.dta"
+**********************Total Hip Replacement
+append using  \totalhip.dta"
+**********************Total Knee Replacement
+append using  \totalknee.dta"
+*****************************************Lobectomy/Pneumonectomy
+append using  \lobectomy.dta"
+**************************************Prostatectomy
+append using  \prostatectomy.dta"
+**************************************Thyroidectomy
+append using  \thyroidectomy.dta"
+************************************PANCREATECTOMY
+append using  \pancreatectomy.dta"
+************************Spinal Fusion
+append using  \spinalfusion.dta"
+************************LEamp
+append using  \LEamp.dta"
+**********************HYSTERECTOMY
+append using  \hysterectomy.dta"
+************************NEPHRECTOMY
+append using  \nephrectomy.dta"
+*********************************MASTECTOMY
+append using  \mastectomy.dta"
+************************CYSTECTOMY
+append using  \cystectomy.dta"
+************************GASTRIC BYPASS
+append using  \gastricbypass.dta"
+************************ORIFFEMUR
+append using  \ORIFFEMUR.dta"
+***********************FLAPRECON
+append using  \FLAPRECON.dta"
+***********************LIVERRESECTION
+append using  \LIVERRESECTION.dta"
+**********************SPLENECTOMY
+append using  \SPLENECTOMY.dta"
+save  \ALLPROC pre prop match.dta", replace
+
+
+
+
+
+

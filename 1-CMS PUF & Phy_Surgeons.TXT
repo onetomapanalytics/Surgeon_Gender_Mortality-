@@ -1,0 +1,64 @@
+*This file contains cleaning and preparation code for the Physician Compare 2016 file.
+
+
+*YEAR 2016*
+
+*Reading the 2016 Physician Compare File Containig Physician Data 
+
+use "PUF & Physician Compare 2016.dta"
+
+*Dropping Gender and Primary Specialty from Phy Compare File and keeping only graduation year 
+
+drop  gender primaryspecialty
+
+*Dropping all the Identity/Address variables to de indentify 
+
+drop nppes_provider_mi nppes_credentials nppes_provider_street1 nppes_provider_street2 nppes_provider_city nppes_provider_zip  medicare_participation_indicator
+
+********************************
+
+*using codebook function to check unique number of surgeons 
+codebook npi
+
+*Generating a variable "Surgeons" to keep below specialities 
+
+gen Surgeons = provider_type == "General Surgery" | provider_type == "Orthopedic Surgery" | provider_type == "Neurosurgery" | provider_type == "Vascular Surgery" | provider_type == "Thoracic Surgery" | provider_type == "Cardiac Surgery"| provider_type == "Colorectal Surgery (Proctology)" | provider_type == "Plastic and Reconstructive Surgery" | provider_type == "Gynecological Oncology" | provider_type == "Surgical Oncology" | provider_type == "Hand Surgery" | provider_type == "Maxillofacial Surgery" | provider_type == "Otolaryngology" | provider_type == "Urology"
+
+keep if Surgeons == 1
+
+*tabulating the the surgeon gender and provider type 
+tab Surgeons nppes_provider_gender
+
+*Using the below lines of code to tabulate unique surgeons and also remove the repeated instances of same surgeon 
+
+sort npi 
+* the first obs is always an index
+by npi : gen idx = _n == 1
+by npi : gen idx_2 = _n 
+
+
+tab nppes_provider_gender Surgeons if idx == 1
+
+tab Surgeons nppes_provider_gender if idx == 1
+
+tab nppes_provider_gender if idx == 1 ,sort 
+
+*Keeping only unique Surgeon for 2016
+
+keep if idx == 1
+
+*droppping irrelevanet vairables 
+
+drop nppes_entity_code nppes_provider_state nppes_provider_country place_of_service hcpcs_code hcpcs_description hcpcs_drug_indicator 
+
+drop year Surgeons idx idx_2
+
+*dropping numeric version of npi and renaming the string version which will be used to merge with FL AHCA data
+
+drop npi
+rename npi_str npi
+
+
+save "PUF & Physician Compare 2016 Surgeons OnlyV2.dta", replace  
+
+

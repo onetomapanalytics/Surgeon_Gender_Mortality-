@@ -1,0 +1,855 @@
+This file contains code to further pre process the data based on age > 18, coding for overall morality, and mortality  for each type of admission, and finally generating variables that capture specific procedures based on ICD9 codes from the Principal procedure variable. This was done for the 2010-2015 master file.
+
+
+*Cleaning and coding for various procedures 
+
+use "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta"
+
+drop if age <18
+
+sort npi 
+* the first obs is always an index
+by npi : gen idx = _n == 1
+
+tab provider_type nppes_provider_gender if idx == 1
+
+**********generating variable for mortality by discharge status deceased***************
+
+gen mortality = dischstat == "20"
+
+************mortality by admission priority and surgeon gender*****************
+gen mortalityemergent = .
+replace mortalityemergent = 1 if adm_prior == "1" & dischstat == "20"
+replace mortalityemergent = 0 if adm_prior == "1" & dischstat!= "20"
+
+tab mortalityemergent
+
+tab nppes_provider_gender mortalityemergent, row chi2
+
+
+gen mortalityurgent = .
+replace mortalityurgent = 1 if adm_prior == "2" & dischstat == "20"
+replace mortalityurgent = 0 if adm_prior == "2" & dischstat!= "20"
+
+tab mortalityurgent
+
+tab nppes_provider_gender mortalityurgent, row chi2
+
+
+gen mortalityelective = .
+replace mortalityelective = 1 if adm_prior == "3" & dischstat == "20"
+replace mortalityelective = 0 if adm_prior == "3" & dischstat!= "20"
+
+tab mortalityelective
+
+tab nppes_provider_gender mortalityelective, row chi2
+
+
+gen mortalitytrauma = .
+replace mortalitytrauma = 1 if adm_prior == "5" & dischstat == "20"
+replace mortalitytrauma = 0 if adm_prior == "5" & dischstat!= "20"
+
+tab mortalitytrauma
+
+tab nppes_provider_gender mortalitytrauma, row chi2
+
+gen mortalityemergent = .
+replace mortalityemergent = 1 if adm_prior == 1 & dischstat == "20"
+replace mortalityemergent = 0 if adm_prior == 1 & dischstat!= "20"
+
+tab mortalityemergent
+
+tab nppes_provider_gender mortalityemergent, row chi2
+
+
+
+gen mortalityurgent = .
+replace mortalityurgent = 1 if adm_prior == 2 & dischstat == "20"
+replace mortalityurgent = 0 if adm_prior == 2 & dischstat!= "20"
+
+tab mortalityurgent
+
+tab nppes_provider_gender mortalityurgent, row chi2
+
+
+gen mortalityelective = .
+replace mortalityelective = 1 if adm_prior == 3 & dischstat == "20"
+replace mortalityelective = 0 if adm_prior == 3 & dischstat!= "20"
+
+tab mortalityelective
+
+tab nppes_provider_gender mortalityelective, row chi2
+
+
+gen mortalitytrauma = .
+replace mortalitytrauma = 1 if adm_prior == 4 & dischstat == "20"
+replace mortalitytrauma = 0 if adm_prior == 4 & dischstat!= "20"
+
+tab mortalitytrauma
+
+tab nppes_provider_gender mortalitytrauma, row chi2
+
+
+*****************CCI CALC**************************
+charlson othdiag1-othdiag30, index (c) assign0 noshow
+rename charlindex CCI
+rename grpci CCIcat
+
+tab CCIcat mortality
+
+*dropping irrelevant vairables
+drop ynch1-weightch17
+
+
+************Laparoscopic Cholecystectomy****************
+*5123	Laparoscopic cholecystectomy
+*5124	Laparoscopic partial cholecystectomy
+
+gen lapchole = . 
+
+foreach var of varlist prinproc {
+replace lapchole = 1 if `var'=="51.23" |`var'=="51.24"      
+}
+
+tab lapchole
+
+replace lapchole = 0 if lapchole == .
+
+tab lapchole
+
+************open cholecystectomy*********************
+*5121	Other partial cholecystectomy
+*5122	Cholecystectomy
+
+gen openchole = . 
+
+foreach var of varlist prinproc {
+replace openchole = 1 if `var'=="51.21" |`var'=="51.22"      
+}
+
+tab openchole
+
+
+****************************EXLAP***************************************************************
+
+*5411	Exploratory laparotomy
+*5419	Other laparotomy
+
+gen exlap = . 
+
+foreach var of varlist prinproc {
+replace exlap = 1 if `var'=="54.11" |`var'=="54.19"     
+}
+
+tab exlap
+
+replace exlap = 0 if exlap == .
+
+tab exlap
+
+tab nppes_provider_gender exlap, row chi2
+
+
+
+***************EVAR******************************************
+
+*3978	Endovascular implantation of branching or fenestrated graft(s) in aorta
+*3971	Endovascular implantation of other graft in abdominal aorta
+*3973	Endovascular implantation of graft in thoracic aorta
+
+gen evar = . 
+
+foreach var of varlist prinproc {
+replace evar = 1 if `var'=="39.78" |`var'=="39.71" |`var'=="39.73"      
+}
+
+tab evar
+
+replace evar = 0 if evar == .
+
+tab evar
+
+***********************CEA***************************
+*3812	Endarterectomy, other vessels of head and neck
+
+gen CEA = . 
+
+foreach var of varlist prinproc {
+replace CEA = 1 if `var'=="38.12"   
+}
+
+tab CEA
+
+replace CEA = 0 if CEA == .
+
+tab CEA
+
+
+*************************laparoscopic COLECTOMY******************************
+*1731	Laparoscopic multiple segmental resection of large intestine
+*1732	Laparoscopic cecectomy
+*1733	Laparoscopic right hemicolectomy
+*1734	Laparoscopic resection of transverse colon
+*1735	Laparoscopic left hemicolectomy
+*1736	Laparoscopic sigmoidectomy
+*4581	Laparoscopic total intra-abdominal colectomy
+
+
+gen lapcolectomy = . 
+
+foreach var of varlist prinproc {
+replace lapcolectomy = 1 if `var'=="17.31" |`var'=="17.32" |`var'=="17.33" |`var'=="17.34" |`var'=="17.35" |`var'=="17.36" |`var'=="45.81"     
+}
+
+tab lapcolectomy
+
+replace lapcolectomy = 0 if lapcolectomy == .
+
+tab lapcolectomy
+
+tab nppes_provider_gender mortality if lapcolectomy == 1, row chi2
+
+*****************open Colectomy********************
+
+*4571	Open and other multiple segmental resection of large intestine
+*4572	Open and other cecectomy
+*4573	Open and other right hemicolectomy
+*4574	Open and other resection of transverse colon
+*4575	Open and other left hemicolectomy
+*4576	Open and other sigmoidectomy
+*4579	Other and unspecified partial excision of large intestine
+*4582	Open total intra-abdominal colectomy
+*4583	Other and unspecified total intra-abdominal colectomy
+
+		  
+gen opencolectomy = . 
+
+foreach var of varlist prinproc {
+replace opencolectomy = 1 if `var'=="45.71" |`var'=="45.72" |`var'=="45.73" |`var'=="45.74" |`var'=="45.75" |`var'=="45.76" |`var'=="45.79" |`var'=="45.82" |`var'=="45.83"     
+}
+
+tab opencolectomy
+
+replace opencolectomy = 0 if opencolectomy == .
+
+tab opencolectomy
+
+tab nppes_provider_gender mortality if opencolectomy == 1, row chi2
+
+
+******************************************CABG*************************************************************
+*3610	Aortocoronary bypass for heart revascularization, not otherwise specified
+*3611	(Aorto)coronary bypass of one coronary artery
+*3612	(Aorto)coronary bypass of two coronary arteries
+*3613	(Aorto)coronary bypass of three coronary arteries
+*3614	(Aorto)coronary bypass of four or more coronary arteries
+*3615	Single internal mammary-coronary artery bypass
+*3616	Double internal mammary-coronary artery bypass
+*3617	Abdominal-coronary artery bypass
+*3619	Other bypass anastomosis for heart revascularization
+
+
+gen CABG = . 
+
+foreach var of varlist prinproc {
+replace CABG = 1 if `var'=="36.10" |`var'=="36.11" |`var'=="36.12" |`var'=="36.13" |`var'=="36.14" |`var'=="36.15" |`var'=="36.16" |`var'=="36.17" |`var'=="36.19"     
+}
+
+tab CABG
+
+replace CABG = 0 if CABG == .
+
+tab CABG
+
+tab nppes_provider_gender mortality if CABG == 1, row chi2
+
+
+
+**********************Total Hip Replacement*****************************************
+*8151 total hip replacement
+
+gen totalhip = . 
+
+foreach var of varlist prinproc {
+replace totalhip = 1 if `var'=="81.51"      
+}
+
+tab totalhip
+
+replace totalhip = 0 if totalhip == .
+
+tab totalhip
+
+tab nppes_provider_gender mortality if totalhip == 1, row chi2
+
+**********************Total Knee Replacement*****************************************
+*8154 total knee replacement
+
+gen totalknee = . 
+
+foreach var of varlist prinproc {
+replace totalknee = 1 if `var'=="81.54"      
+}
+
+tab totalknee
+
+replace totalknee = 0 if totalknee == .
+
+tab totalknee
+
+tab nppes_provider_gender mortality if totalknee == 1, row chi2
+
+
+*****************************************Lobectomy/Pneumonectomy****************************************
+*3230	Thoracoscopic segmental resection of lung
+*3241	Thoracoscopic lobectomy of lung
+*3250	Thoracoscopic pneumonectomy
+*3239	Other and unspecified segmental resection of lung
+*3249	Other lobectomy of lung
+*3259	Other and unspecified pneumonectomy
+
+count if prinproc == "32.59"
+tab nppes_provider_gender if prinproc == "32.59" 
+
+gen lobectomy = . 
+
+foreach var of varlist prinproc {
+replace lobectomy = 1 if `var'=="32.30" |`var'=="32.39" |`var'=="32.41" |`var'=="32.49" |`var'=="32.50" |`var'=="32.59"     
+}
+
+tab lobectomy
+
+replace lobectomy = 0 if lobectomy == .
+
+tab lobectomy
+
+tab nppes_provider_gender mortality if lobectomy == 1, row chi2
+
+
+*****************************************Kidney TX****************************************
+*5561	Renal autotransplantation
+*5569	Other kidney transplantation
+
+
+*gen kidneytx = . 
+
+*foreach var of varlist prinproc-othproc30 {
+*replace kidneytx = 1 if `var'=="55.61" |`var'=="55.69"      
+*}
+
+*tab kidneytx
+
+*replace kidneytx = 0 if kidneytx == .
+
+*tab kidneytx
+
+*tab nppes_provider_gender mortality if kidneytx == 1, row chi2
+
+
+**************************************Prostatectomy****************************************
+*60.21	Transurethral (ultrasound) guided laser induced prostatectomy (TULIP)
+*60.29	Other transurethral prostatectomy
+*60.3	Suprapubic prostatectomy
+*60.4	Retropubic prostatectomy
+*60.5	Radical prostatectomy
+*60.61	Local excision of lesion of prostate
+*60.62	Perineal prostatectomy
+*60.69	Other prostatectomy
+
+count if prinproc == "60.5"
+
+gen prostatectomy = . 
+
+foreach var of varlist prinproc {
+replace prostatectomy = 1 if `var'=="60.21" |`var'=="60.29" |`var'=="60.3" |`var'=="60.4" |`var'=="60.5" |`var'=="60.61" |`var'=="60.62" |`var'=="60.69"      
+}
+
+tab prostatectomy
+
+replace prostatectomy = 0 if prostatectomy == .
+
+tab prostatectomy
+
+tab nppes_provider_gender mortality if prostatectomy == 1, row chi2
+
+
+**************************************Thyroidectomy****************************************
+*6062	Unilateral thyroid lobectomy
+*0631	Excision of lesion of thyroid
+*0639	Other partial thyroidectomy
+*064	Complete thyroidectomy
+*0650	Substernal thyroidectomy, not otherwise specified
+*0651	Partial substernal thyroidectomy
+*0652	Complete substernal thyroidectomy
+
+count if prinproc == "06.50"
+
+gen thyroidectomy = . 
+
+foreach var of varlist prinproc {
+replace thyroidectomy = 1 if `var'=="60.62" |`var'=="06.31" |`var'=="06.39" |`var'=="06.4" |`var'=="06.50" |`var'=="06.51" |`var'=="06.52"    
+}
+
+tab thyroidectomy
+
+replace thyroidectomy = 0 if thyroidectomy == .
+
+tab thyroidectomy
+
+tab nppes_provider_gender mortality if thyroidectomy == 1, row chi2
+
+*****************************************Liver TX****************************************
+*5051	Auxiliary liver transplant
+*5059	Other transplant of liver
+
+*gen livertx = . 
+
+*foreach var of varlist prinproc-othproc30 {
+*replace livertx = 1 if `var'=="50.51" |`var'=="50.59"      
+*}
+
+*tab livertx
+
+*replace livertx = 0 if livertx == .
+
+*tab livertx
+
+*tab nppes_provider_gender mortality if livertx == 1, row chi2
+
+************************************PANCREATECTOMY*****************************************
+*5251	Proximal pancreatectomy
+*5252	Distal pancreatectomy
+*5253	Radical subtotal pancreatectomy
+*5259	Other partial pancreatectomy
+*526	Total pancreatectomy
+*527	Radical pancreaticoduodenectomy
+
+count if prinproc == "52.7"
+
+gen pancreatectomy = . 
+
+foreach var of varlist prinproc {
+replace pancreatectomy = 1 if `var'=="52.51" |`var'=="52.52" |`var'=="52.53" |`var'=="52.59" |`var'=="52.6" |`var'=="52.7" 
+}
+
+tab pancreatectomy
+
+replace pancreatectomy = 0 if pancreatectomy == .
+
+tab pancreatectomy
+
+tab nppes_provider_gender mortality if pancreatectomy == 1, row chi2
+
+************************Spinal Fusion***************************************
+*8162	Fusion or refusion of 2-3 vertebrae
+*8163	Fusion or refusion of 4-8 vertebrae
+*8164	Fusion or refusion of 9 or more vertebrae
+*8100	Spinal fusion, not otherwise specified
+*8101	Atlas-axis spinal fusion
+*8102	Other cervical fusion of the anterior column, anterior technique
+*8103	Other cervical fusion of the posterior column, posterior technique
+*8104	Dorsal and dorsolumbar fusion of the anterior column, anterior technique
+*8105	Dorsal and dorsolumbar fusion of the posterior column, posterior technique
+*8106	Lumbar and lumbosacral fusion of the anterior column, anterior technique
+*8107	Lumbar and lumbosacral fusion of the posterior column, posterior technique
+*8108	Lumbar and lumbosacral fusion of the anterior column, posterior technique
+
+count if prinproc == "81.0"
+
+gen spinalfusion = . 
+
+foreach var of varlist prinproc {
+replace spinalfusion = 1 if `var'=="81.62" |`var'=="81.63" |`var'=="81.64" |`var'=="81.00" |`var'=="81.01" |`var'=="81.02" |`var'=="81.03" |`var'=="81.04" |`var'=="81.05" |`var'=="81.06" |`var'=="81.07" |`var'=="81.08"
+}
+
+tab spinalfusion
+
+replace spinalfusion = 0 if spinalfusion == .
+
+tab spinalfusion
+
+tab nppes_provider_gender mortality if spinalfusion == 1, row chi2
+
+tab provider_type mortality if spinalfusion == 1, row chi2
+
+
+************************LEamp***************************************
+*8415	Other amputation below knee
+*8416	Disarticulation of knee
+*8417	Amputation above knee
+
+
+gen LEamp = . 
+
+foreach var of varlist prinproc {
+replace LEamp = 1 if `var'=="84.15" |`var'=="84.16" |`var'=="84.17"  
+}
+
+tab LEamp
+
+replace LEamp = 0 if LEamp == .
+
+tab LEamp
+
+tab nppes_provider_gender mortality if LEamp == 1, row chi2
+
+tab provider_type mortality if LEamp == 1, row chi2
+
+**********************HYSTERECTOMY**************************************
+*6831	Laparoscopic supracervical hysterectomy [LSH]
+*6839	Other and unspecified subtotal abdominal hysterectomy
+*6841	Laparoscopic total abdominal hysterectomy
+*6849	Other and unspecified total abdominal hysterectomy
+*6851	Laparoscopically assisted vaginal hysterectomy (LAVH)
+*6859	Other and unspecified vaginal hysterectomy
+*6861	Laparoscopic radical abdominal hysterectomy
+*6869	Other and unspecified radical abdominal hysterectomy
+*6871	Laparoscopic radical vaginal hysterectomy [LRVH]
+*6879	Other and unspecified radical vaginal hysterectomy
+*689	Other and unspecified hysterectomy
+
+count if prinproc == "68.9"
+
+gen hysterectomy = . 
+
+foreach var of varlist prinproc {
+replace hysterectomy = 1 if `var'=="68.31" |`var'=="68.39" |`var'=="68.41" |`var'=="68.49" |`var'=="68.51" |`var'=="68.59" |`var'=="68.61" |`var'=="68.69" |`var'=="68.71" |`var'=="68.79" |`var'=="68.9"  
+}
+
+tab hysterectomy
+
+replace hysterectomy = 0 if hysterectomy == .
+
+tab hysterectomy
+
+tab nppes_provider_gender mortality if hysterectomy == 1, row chi2
+
+tab provider_type mortality if hysterectomy == 1, row chi2
+
+************************NEPHRECTOMY******************************
+*554	Partial nephrectomy
+*5551	Nephroureterectomy
+*5552	Nephrectomy of remaining kidney
+*5553	Removal of transplanted or rejected kidney
+*5554	Bilateral nephrectomy
+
+count if prinproc == "55.4"
+
+gen nephrectomy = . 
+
+foreach var of varlist prinproc {
+replace nephrectomy = 1 if `var'=="55.4" |`var'=="55.51" |`var'=="55.52" |`var'=="55.53" |`var'=="55.54"  
+}
+
+tab nephrectomy
+
+replace nephrectomy = 0 if nephrectomy == .
+
+tab nephrectomy
+
+tab nppes_provider_gender mortality if nephrectomy == 1, row chi2
+
+tab provider_type mortality if nephrectomy == 1, row chi2
+
+************************INGUINAL HERNIA REPAIR******************************
+*1711	Laparoscopic repair of direct inguinal hernia with graft or prosthesis
+*1712	Laparoscopic repair of indirect inguinal hernia with graft or prosthesis
+*1713	Laparoscopic repair of inguinal hernia with graft or prosthesis, not otherwise specified
+*1721	Laparoscopic bilateral repair of direct inguinal hernia with graft or prosthesis
+*1722	Laparoscopic bilateral repair of indirect inguinal hernia with graft or prosthesis
+*1723	Laparoscopic bilateral repair of inguinal hernia, one direct and one indirect, with graft or prosthesis
+*1724	Laparoscopic bilateral repair of inguinal hernia with graft or prosthesis, not otherwise specified
+
+*count if prinproc == "17.2"
+
+*gen laping = . 
+
+*foreach var of varlist prinproc {
+*replace laping = 1 if `var'=="17.11" |`var'=="17.12" |`var'=="17.13" |`var'=="17.21" |`var'=="17.22" |`var'=="17.23" |`var'=="17.24"  
+*}
+
+*tab laping
+
+*replace laping = 0 if laping == .
+
+*tab laping
+
+*tab nppes_provider_gender mortality if laping == 1, row chi2
+
+*5300	Unilateral repair of inguinal hernia, not otherwise specified
+*5301	Other and open repair of direct inguinal hernia
+*5302	Other and open repair of indirect inguinal hernia
+*5303	Other and open repair of direct inguinal hernia with graft or prosthesis
+*5304	Other and open repair of indirect inguinal hernia with graft or prosthesis
+*5305	Repair of inguinal hernia with graft or prosthesis, not otherwise specified
+*5310	Bilateral repair of inguinal hernia, not otherwise specified
+*5311	Other and open bilateral repair of direct inguinal hernia
+*5312	Other and open bilateral repair of indirect inguinal hernia
+*5313	Other and open bilateral repair of inguinal hernia, one direct and one indirect
+*5314	Other and open bilateral repair of direct inguinal hernia with graft or prosthesis
+*5315	Other and open bilateral repair of indirect inguinal hernia with graft or prosthesis
+*5316	Other and open bilateral repair of inguinal hernia, one direct and one indirect, with graft or prosthesis
+*5317	Bilateral inguinal hernia repair with graft or prosthesis, not otherwise specified
+
+*count if prinproc == "53.00"
+
+*gen opening = . 
+
+*foreach var of varlist prinproc{
+*replace opening = 1 if `var'=="53.00" |`var'=="53.01" |`var'=="53.02" |`var'=="53.03" |`var'=="53.04" |`var'=="53.05" |`var'=="53.10" |`var'=="53.11" |`var'=="53.12" |`var'=="53.13" |`var'=="53.14" |`var'=="53.15" |`var'=="53.16" |`var'=="53.17"  
+*}
+
+*tab opening
+
+*replace opening = 0 if opening == .*
+
+*tab opening
+
+*tab nppes_provider_gender mortality if opening == 1, row chi2
+
+*********************************MASTECTOMY********************************************************
+*8523	Subtotal mastectomy
+*8533	Unilateral subcutaneous mammectomy with synchronous implant
+*8534	Other unilateral subcutaneous mammectomy
+*8535	Bilateral subcutaneous mammectomy with synchronous implant
+*8536	Other bilateral subcutaneous mammectomy
+*8541	Unilateral simple mastectomy
+*8542	Bilateral simple mastectomy
+*8543	Unilateral extended simple mastectomy
+*8544	Bilateral extended simple mastectomy
+*8545	Unilateral radical mastectomy
+*8546	Bilateral radical mastectomy
+*8547	Unilateral extended radical mastectomy
+*8548	Bilateral extended radical mastectomy
+
+gen mastectomy = . 
+
+foreach var of varlist prinproc {
+replace mastectomy = 1 if `var'=="85.23" |`var'=="85.33" |`var'=="85.34" |`var'=="85.35" |`var'=="85.36" |`var'=="85.41" |`var'=="85.42" |`var'=="85.43" |`var'=="85.44" |`var'=="85.45" |`var'=="85.46" |`var'=="85.47" |`var'=="85.48" 
+}
+
+tab mastectomy
+
+replace mastectomy = 0 if mastectomy == .
+
+tab mastectomy
+
+tab nppes_provider_gender mortality if mastectomy == 1, row chi2
+
+
+************************CYSTECTOMY******************************
+*576	Partial cystectomy
+*5771	Radical cystectomy
+*5779	Other total cystectomy
+
+count if prinproc == "57.6"
+
+gen cystectomy = . 
+
+foreach var of varlist prinproc {
+replace cystectomy = 1 if `var'=="57.6" |`var'=="57.71" |`var'=="57.79"  
+}
+
+tab cystectomy
+
+replace cystectomy = 0 if cystectomy == .
+
+tab cystectomy
+
+tab nppes_provider_gender mortality if cystectomy == 1, row chi2
+
+************************GASTRIC BYPASS******************************
+*4431	High gastric bypass
+*4382	Laparoscopic vertical (sleeve) gastrectomy
+*4389	Open and other partial gastrectomy
+*4468	Laparoscopic gastroplasty
+*4493	Insertion of gastric bubble (balloon)
+*4495	Laparoscopic gastric restrictive procedure
+*4496	Laparoscopic revision of gastric restrictive procedure
+
+**FINAL
+*43.7 	partial gastrectomy with anastomosis to jejunum (roux-en-y)
+*43.82	Laparoscopic vertical (sleeve) gastrectomy
+*43.89	Partial gastrectomy with bypass or sleeve resection 
+*44.31	High gastric bypass
+*44.38	Laparoscopic gastroenterostomy (roux-en-y)
+*44.39 	other gastroenterostomy without gastrectomy (roux-en-y)
+*44.68	Laparoscopic gastroplasty
+*44.93	Insertion of gastric bubble (balloon)
+*44.95	Laparoscopic gastric restrictive procedure
+
+
+count if prinproc == "4493"
+count if prindiag == "27801" & gastricbypass == 1
+
+gen gastricbypass = . 
+
+foreach var of varlist prinproc{
+replace gastricbypass = 1 if `var'=="437" |`var'=="4382" |`var'=="4389" |`var'=="4431" |`var'=="4438" |`var'=="4439" |`var'=="4495" |`var'=="4468" |`var'=="4493"
+}
+
+tab gastricbypass
+
+replace gastricbypass = 0 if gastricbypass == .
+
+tab gastricbypass
+
+tab nppes_provider_gender mortality if gastricbypass == 1 & prindiag == "27801", row chi2
+
+
+************************CARPAL TUNNEL******************************
+*0443	Release of carpal tunnel
+
+count if prinproc == "04.43"
+
+
+gen carpaltunnel = . 
+
+foreach var of varlist prinproc {
+replace carpaltunnel = 1 if `var'=="04.43"   
+}
+
+tab carpaltunnel
+
+replace carpaltunnel = 0 if carpaltunnel == .
+
+tab carpaltunnel
+
+tab nppes_provider_gender mortality if carpaltunnel == 1, row chi2
+
+
+
+************************ORIFFEMUR******************************
+*7935	Open reduction of fracture with internal fixation, femur
+
+count if prinproc == "79.35"
+
+
+gen ORIFFEMUR = . 
+
+foreach var of varlist prinproc {
+replace ORIFFEMUR = 1 if `var'=="79.35"   
+}
+
+tab ORIFFEMUR
+
+replace ORIFFEMUR = 0 if ORIFFEMUR == .
+
+tab ORIFFEMUR
+
+tab nppes_provider_gender mortality if ORIFFEMUR == 1, row chi2
+
+***********************FLAPRECON****************************************
+*8571	Latissimus dorsi myocutaneous flap
+*8572	Transverse rectus abdominis myocutaneous (TRAM) flap, pedicled
+*8573	Transverse rectus abdominis myocutaneous (TRAM) flap, free
+*8574	Deep inferior epigastric artery perforator (DIEP) flap, free
+*8575	Superficial inferior epigastric artery (SIEA) flap, free
+*8576	Gluteal artery perforator (GAP) flap, free
+
+
+gen FLAPRECON = . 
+
+foreach var of varlist prinproc {
+replace FLAPRECON = 1 if `var'=="85.71" | `var'=="85.72" | `var'=="85.73" | `var'=="85.74" | `var'=="85.75" | `var'=="85.76"   
+}
+
+tab FLAPRECON
+
+replace FLAPRECON = 0 if FLAPRECON == .
+
+tab FLAPRECON
+
+tab nppes_provider_gender mortality if FLAPRECON == 1, row chi2
+
+summarize age if FLAPRECON == 1
+
+***********************LIVERRESECTION****************************************
+*503	Lobectomy of liver
+*5022	Partial hepatectomy
+
+count if prinproc == "50.3"
+
+gen LIVERRESECTION = . 
+
+foreach var of varlist prinproc{
+replace LIVERRESECTION = 1 if `var'=="50.3" | `var'=="50.22"   
+}
+
+tab LIVERRESECTION
+
+replace LIVERRESECTION = 0 if LIVERRESECTION == .
+
+tab LIVERRESECTION
+
+tab nppes_provider_gender mortality if LIVERRESECTION == 1, row chi2
+
+
+**********************ESOPHAGECTOMY****************************************
+*4240	Esophagectomy, not otherwise specified
+*4241	Partial esophagectomy
+*4242	Total esophagectomy
+
+
+*gen ESOPHAGECTOMY = . 
+
+*foreach var of varlist prinproc-othproc10{
+*replace ESOPHAGECTOMY = 1 if `var'=="42.40" | `var'=="42.41" | `var'=="42.42"  
+*}
+
+*tab ESOPHAGECTOMY
+
+*replace ESOPHAGECTOMY = 0 if ESOPHAGECTOMY == .
+
+*tab ESOPHAGECTOMY
+
+*tab nppes_provider_gender mortality if ESOPHAGECTOMY == 1, row chi2
+
+**********************SPLENECTOMY****************************************
+*4143	Partial splenectomy
+*415	Total splenectomy
+
+count if prinproc == "41.5"
+
+gen SPLENECTOMY = . 
+
+foreach var of varlist prinproc {
+replace SPLENECTOMY = 1 if `var'=="41.43" | `var'=="41.5" 
+}
+
+tab SPLENECTOMY
+
+replace SPLENECTOMY = 0 if SPLENECTOMY == .
+
+tab SPLENECTOMY
+
+tab nppes_provider_gender mortality if SPLENECTOMY == 1, row chi2
+
+******************************************************************
+tab nppes_provider_gender mortality if lapchole == 1, row chi2
+tab nppes_provider_gender mortality if openchole == 1, row chi2
+tab nppes_provider_gender mortality if exlap == 1, row chi2
+tab nppes_provider_gender mortality if evar == 1, row chi2
+tab nppes_provider_gender mortality if CEA == 1, row chi2
+tab nppes_provider_gender mortality if lapcolectomy == 1, row chi2
+tab nppes_provider_gender mortality if opencolectomy == 1, row chi2
+tab nppes_provider_gender mortality if CABG == 1, row chi2
+tab nppes_provider_gender mortality if totalhip == 1, row chi2
+tab nppes_provider_gender mortality if totalknee == 1, row chi2
+tab nppes_provider_gender mortality if lobectomy == 1, row chi2
+tab nppes_provider_gender mortality if prostatectomy == 1, row chi2
+tab nppes_provider_gender mortality if thyroidectomy == 1, row chi2
+tab nppes_provider_gender mortality if pancreatectomy == 1, row chi2
+tab nppes_provider_gender mortality if LEamp == 1, row chi2
+tab nppes_provider_gender mortality if hysterectomy == 1, row chi2
+tab nppes_provider_gender mortality if spinalfusion == 1, row chi2
+tab nppes_provider_gender mortality if nephrectomy == 1, row chi2
+tab nppes_provider_gender mortality if mastectomy == 1, row chi2
+tab nppes_provider_gender mortality if cystectomy == 1, row chi2
+tab nppes_provider_gender mortality if gastricbypass == 1, row chi2
+tab nppes_provider_gender mortality if ORIFFEMUR == 1, row chi2
+tab nppes_provider_gender mortality if FLAPRECON == 1, row chi2
+tab nppes_provider_gender mortality if LIVERRESECTION == 1, row chi2
+tab nppes_provider_gender mortality if SPLENECTOMY == 1, row chi2
+
+save "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta", replace

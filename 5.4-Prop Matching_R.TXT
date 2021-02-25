@@ -1,0 +1,104 @@
+Code for Prop Matching, it was repreated for each individual procedure 
+
+
+#Reading the Dataset CABG
+
+library(tableone)
+library(MatchIt)
+library(Matching)
+library(logitnorm)
+library(readstata13)
+
+data1<-read.dta13(CABG.dta")
+
+# looking at the dimensions of the dataset
+dim(data1)
+
+# looking at any missing values in our dataset
+sum(is.na(data1))
+
+# look at data structure
+str(data1[1:60])
+str(data1[61:88])
+
+str(data1[1:7])
+
+# Converting all the variables of the dataset into categorical variables and numeric types
+data1[c(1:2)] <- lapply(data1[,c(1:2)] , as.numeric)
+data1[c(3:6)] <- lapply(data1[,c(3:6)] , as.factor)
+data1$nppes_provider_gender<- as.factor(data1$nppes_provider_gender)
+
+# look at data structure
+#str(data1[1:60])
+#str(data1[61:88])
+
+print(table(data1$nppes_provider_gender))
+
+print(prop.table(table(data1$nppes_provider_gender)))
+
+#covariates we will use (shorter list than you would use in practice)
+xvars<-c("Years_Exp","sex","age","ethnicity","race","adm_prior","CCI")
+
+#look at a table 1 Pre Propensity Matching
+table1<- CreateTableOne(vars=xvars,strata="nppes_provider_gender", data=data1, test=FALSE)
+## include standardized mean difference (SMD)
+smd1<-print(table1,smd=TRUE)
+
+
+#propensity score matching
+
+#fit a propensity score model. logistic regression
+set.seed(1123)
+psmodel<-glm(nppes_provider_gender ~ Years_Exp+sex+age+ethnicity+race+adm_prior+CCI,
+    family=binomial(),data=data1)
+
+#show coefficients Sumamry
+summary(psmodel)
+
+#create propensity score
+pscore<-psmodel$fitted.values
+
+#do  matching 
+
+library(Matching)
+set.seed(1223)
+psmatch<-Match(Tr=data1$nppes_provider_gender == "1",M=1,X=logit(pscore),replace=FALSE)
+
+matched<-data1[unlist(psmatch[c("index.treated","index.control")]), ]
+
+library(foreign)
+save.dta13(matched,file ="/CABG_matched.dta")
+
+print(table(matched$nppes_provider_gender))
+
+print(prop.table(table(matched$nppes_provider_gender)))
+
+#get standardized differences
+matchedtab1<-CreateTableOne(vars=xvars,strata ="nppes_provider_gender",data=matched, test = FALSE)
+smd2<-print(matchedtab1, smd = TRUE)
+
+#############################
+
+#Sub setting unmatched & matched data for K.S Tests of numeric variables  
+X<-subset(data1, nppes_provider_gender == 0)
+Y<-subset(data1, nppes_provider_gender == 1)
+
+x<-subset(matched, nppes_provider_gender == 0)
+y<-subset(matched, nppes_provider_gender == 1)
+
+#Patient AGE Unmatched and Matched
+ks.test(X$age,Y$age)
+ks.test(x$age,y$age)
+
+#Surgeon Years of Experience Unmatched and Matched
+ks.test(X$Years_Exp,Y$Years_Exp)
+ks.test(x$Years_Exp,y$Years_Exp)
+
+
+library(foreign)
+write.csv(smd1,file = "/CABG_smd1.csv")
+write.csv(smd2,file = "/CABG_smd2.csv")
+
+
+
+

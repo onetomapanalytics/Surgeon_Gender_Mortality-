@@ -1,0 +1,54 @@
+This file contains cleaning, preparation and merging code for the Physician Compare 2016 with the Florida AHCA yearly files (2010-2015), and contains brief code for appending(stacking) the merged files from step 2 to create a combined yearly master file. 
+
+*Reading the AHCA 2010 Data file 
+
+use "\Inp2010.dta"
+
+*Checking for the unique number of NPI's for Operating Physicians
+
+codebook oper_phynp
+
+*matching the name of the merge variable with the Phy comapre files and performing a many to one merge, many physicians from FL AHCA are matched to singular physicians in Phy Compare 
+rename oper_phynp npi
+
+*Medicare Provider Utilization and Payment Data Physician and Other Supplier 2016
+
+merge m:1 npi using "\PUF & Physician Compare 2016 Surgeons Only.dta" ,force
+
+keep if _merge == 3 
+
+drop _merge 
+
+codebook npi
+
+*Years of Experience is the current year minus the graduation year 
+
+gen Years_Exp = year - graduationyear 
+
+tab Years_Exp
+* Dropping if years of experience is zero
+
+drop if Years_Exp <0
+
+save "FL AHCA PUF & Physician Compare 2010",replace 
+
+******************************************************************************************************
+
+Note: The above step of code was repeated through 2011-2015 and then the individual yearly files were appended 
+
+*************APPENDING ALL YEARS******************
+
+use "\FL AHCA PUF & Physician Compare 2010.dta"
+
+*2011
+append using "\FL AHCA PUF & Physician Compare 2011.dta"
+*2012
+append using "\FL AHCA PUF & Physician Compare 2012.dta"
+*2013
+append using "\FL AHCA PUF & Physician Compare 2013.dta"
+*2014
+append using "\FL AHCA PUF & Physician Compare 2014.dta"
+*2015
+append using "\FL AHCA PUF & Physician Compare 2015.dta"
+
+save "\FL AHCA PUF & Physician Compare 2010-2015 MASTER.dta" ,replace 

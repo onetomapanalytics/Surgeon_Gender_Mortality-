@@ -1,0 +1,89 @@
+*Some Descriptive Stats  on matched data
+
+use "\ALLPROCEDURES.dta"
+
+sort npi 
+* the first obs is always an index
+by npi : gen idx = _n == 1
+
+tab provider_type nppes_provider_gender if idx == 1
+
+tab provider_type nppes_provider_gender
+
+tab nppes_provider_gender mortality, row chi2
+
+tab nppes_provider_gender mortalityemergent, row chi2
+tab nppes_provider_gender mortalityurgent, row chi2
+tab nppes_provider_gender mortalityelective, row chi2
+tab nppes_provider_gender mortalitytrauma, row chi2
+
+tab payer nppes_provider_gender, row column chi2
+
+tab dischstat nppes_provider_gender, row column chi2
+
+*********************************
+
+
+#Reading the propensity matched datasets
+
+options(max.print=999999999)
+options(warn=-1)
+
+library(readstata13)
+data1<-read.dta13(file = "/ALLPROC pre prop match.dta")
+
+# looking at the dimensions of the dataset
+dim(data1)
+
+# looking at any missing values in our dataset
+sum(is.na(data1))
+
+# taking a look at the structure of the varaibles in the dataset
+
+str(data1)
+
+
+#data1$CCI= as.factor(data1$CCI)
+data1$provider_type= as.factor(data1$provider_type)
+data1$adm_prior= as.factor(data1$adm_prior)
+data1$admsrc= as.factor(data1$admsrc)
+
+data1$distance= NULL
+data1$weights= NULL
+
+str(data1)
+
+#losdays 
+t.test(losdays~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#tchgs
+t.test(tchgs~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#bene_unique_cnt        
+t.test(bene_unique_cnt~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#line_srvc_cnt      
+t.test(line_srvc_cnt~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#labchgs      
+t.test(labchgs~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#oprmchgs      
+t.test(oprmchgs~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#icuchgs      
+t.test(icuchgs~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#ccuchgs      
+t.test(ccuchgs~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#pt age
+t.test(age~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#Years_Exp
+t.test(Years_Exp~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+#CCI
+t.test(CCI~nppes_provider_gender, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+
